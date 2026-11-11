@@ -21,3 +21,4 @@
         key: "{{ item }}"
         exclusive: yes
       loop: "{{ admin_ssh_keys }}"
+      when: admin_ssh_keys | length > 0
