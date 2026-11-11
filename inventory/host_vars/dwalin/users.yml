@@ -2,4 +2,4 @@
 admin-username: "lali"
 
 admin-ssh-keys:
-  -ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEGgcbyXWdUWGldtOSkdFrjFK4i9VvzQDmT4DsX/79ng vboxuser@ubuntu
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEGgcbyXWdUWGldtOSkdFrjFK4i9VvzQDmT4DsX/79ng vboxuser@ubuntu"
