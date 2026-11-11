@@ -1,0 +1,23 @@
+---
+- name: Správa uživatelů a ssh
+  hosts: all
+  become: yes
+  vars:
+    admin_username: "lali"
+    admin_ssh_keys: []
+
+  tasks:
+    - name: Správa systémového uživatele
+      ansible.builtin.user:
+        name: "{{ admin_username }}"
+        shell: /bin/bash
+        create_home: yes
+        state: present
+
+    - name: Správa SSH autorizovaných klíčů
+      ansible.builtin.authorized_key:
+        user: "{{ admin_username }}"
+        state: present
+        key: "{{ item }}"
+        exclusive: yes
+      loop: "{{ admin_ssh_keys }}"
