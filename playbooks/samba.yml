@@ -1,0 +1,83 @@
+---
+- name: Samba server
+  hosts: dwalin
+  become: true
+  vars:
+    samba_workgroup: WORKGROUP
+    samba_group: sambashare
+    samba_user: sambauser
+    samba_allowed_network: 127.0.0.0/8
+    samba_shares:
+      - name: public
+        path: /srv/samba/public
+        comment: Sdilena slozka
+        read_only: "no"
+        browseable: "yes"
+        valid_users: "@sambashare"
+        create_mask: "0660"
+        directory_mask: "2770"
+
+  tasks:
+    - name: Instalace Samby
+      ansible.builtin.dnf:
+        name: samba
+        state: present
+
+    - name: Skupina pro Sambu
+      ansible.builtin.group:
+        name: "{{ samba_group }}"
+        system: true
+
+    - name: Uzivatel pro Sambu
+      ansible.builtin.user:
+        name: "{{ samba_user }}"
+        group: "{{ samba_group }}"
+        shell: /usr/sbin/nologin
+        create_home: false
+        home: /nonexistent
+        system: true
+
+    - name: Adresare sdilenych slozek
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: root
+        group: "{{ samba_group }}"
+        mode: "2770"
+      loop: "{{ samba_shares }}"
+
+    - name: Konfigurace Samby
+      ansible.builtin.template:
+        src: smb.conf.j2
+        dest: /etc/samba/smb.conf
+        owner: root
+        group: root
+        mode: "0644"
+        validate: testparm -s %s
+        backup: true
+      notify: Restart smbd
+
+    - name: Firewalld zapnut
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: Povolit Sambu jen ze site TUL
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="{{ samba_allowed_network }}" service name="samba" accept'
+        permanent: true
+        immediate: true
+        state: enabled
+
+    - name: smb zapnuto a spusteno
+      ansible.builtin.service:
+        name: smb
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Restart smb
+      ansible.builtin.service:
+        name: smb
+        state: restarted
